@@ -6,6 +6,8 @@ import mysql.connector
 from sqlalchemy import create_engine
 import psycopg2
 
+
+
 path1 = r'C:/Users/boopa/Downloads/pulse-master/data/aggregated/transaction/country/india/state/'
 agg_trans_list = os.listdir(path1)
 
@@ -39,6 +41,7 @@ for state in agg_trans_list:
 aggregated_transaction=pd.DataFrame(column1)
 
 
+
 path2 = r'C:/Users/boopa/Downloads/pulse-master/data/aggregated/user/country/india/state/'
 agg_user_list = os.listdir(path2)
 
@@ -56,9 +59,11 @@ for state in agg_user_list:
             current_file=current_year+file
             data=open(current_file,"r")
 
-            ag_us=json.load(data)
+            
 
-            try:                       
+            try:
+                ag_us=json.load(data) 
+                                      
                 for i in ag_us["data"]["usersByDevice"]:
                     brand=i["brand"]
                     count=i["count"]
@@ -75,10 +80,11 @@ for state in agg_user_list:
 aggregated_user=pd.DataFrame(column2)
 
 
+
 path3 = r'C:/Users/boopa/Downloads/pulse-master/data/map/transaction/hover/country/india/state/'
 map_tran_list = os.listdir(path3)
 
-column3={"States":[],"Years":[],"Quarter":[],"Count":[],"Amount":[],"Name":[]}
+column3={"States":[],"Years":[],"Quarter":[],"District":[],"Count":[],"Amount":[]}
 
 for state in map_tran_list:
     current_states=path3+state+"/"
@@ -95,10 +101,10 @@ for state in map_tran_list:
             map_tr=json.load(data)
             
             for i in map_tr["data"]["hoverDataList"]:
-                name=i["name"]
+                district=i["name"]
                 count=i["metric"][0]["count"]
                 amount=i["metric"][0]["amount"]
-                column3["Name"].append(name)
+                column3["District"].append(district)
                 column3["Count"].append(count)
                 column3["Amount"].append(amount)
                 column3["States"].append(state)
@@ -106,6 +112,7 @@ for state in map_tran_list:
                 column3["Quarter"].append(int(file.strip(".json")))
 
 map_transaction=pd.DataFrame(column3)
+
 
 
 path4 = r'C:/Users/boopa/Downloads/pulse-master/data/map/user/hover/country/india/state/'
@@ -148,7 +155,7 @@ map_users=pd.DataFrame(column4)
 path5 = r'C:/Users/boopa/Downloads/pulse-master/data/top/transaction/country/india/state/'
 top_tran_list = os.listdir(path5)
 
-column5 = {"States": [], "Years": [], "Quarter": [], "Districts": [], "Count": [], "Amount": []}
+column5 = {"States": [], "Years": [], "Quarter": [], "Pincodes":[],"Districts": [], "Count": [], "Amount": []}
 
 for state in top_tran_list:
     current_states = os.path.join(path5, state)
@@ -161,18 +168,24 @@ for state in top_tran_list:
         for file in map_file_list:
             current_file = os.path.join(current_year, file)
             with open(current_file, "r") as data:
-                top_tr = json.load(data)
-                
-                for i in top_tr["data"]["districts"]:
-                    districts = i["entityName"]
-                    count = i["metric"]["count"]
-                    amount = i["metric"]["amount"]
-                    column5["Districts"].append(districts)
-                    column5["Count"].append(count)
-                    column5["Amount"].append(amount)
-                    column5["States"].append(state)
-                    column5["Years"].append(year)
-                    column5["Quarter"].append(int(file.strip(".json")))
+
+                try:                                      
+                    top_tr = json.load(data)
+                    
+                    for i in top_tr["data"]["pincodes"]:
+                        pincodes = i["entityName"]
+                        districts = top_tr["data"]["districts"][0]["entityName"]
+                        count = i["metric"]["count"]
+                        amount = i["metric"]["amount"]
+                        column5["Pincodes"].append(pincodes)
+                        column5["Districts"].append(districts)
+                        column5["Count"].append(count)
+                        column5["Amount"].append(amount)
+                        column5["States"].append(state)
+                        column5["Years"].append(year)
+                        column5["Quarter"].append(int(file.strip(".json")))
+                except:
+                    pass
 
 top_transaction = pd.DataFrame(column5)
 
@@ -182,7 +195,7 @@ path6 = r'C:/Users/boopa/Downloads/pulse-master/data/top/user/country/india/stat
 
 top_user_list = os.listdir(path6)
 
-column6={"States":[],"Years":[],"Quarter":[],"Districts":[],"RegisteredUsers":[]}
+column6={"States":[],"Years":[],"Quarter":[], "Pincodes":[],"Districts":[],"RegisteredUsers":[]}
 
 for state in top_tran_list:
     current_states = os.path.join(path5, state)
@@ -195,20 +208,28 @@ for state in top_tran_list:
         for file in map_file_list:
             current_file = os.path.join(current_year, file)
             with open(current_file, "r") as data:
-
-                top_us = json.load(data)
-                        
-                for i in top_us["data"]["districts"]:
-                    districts = i["entityName"]
-                    count = i["metric"]["count"]
-                    column6["Districts"].append(districts)
-                    column6["RegisteredUsers"].append(count)
-                    column6["States"].append(state)
-                    column6["Years"].append(year)
-                    column6["Quarter"].append(int(file.strip(".json")))
+                    
+                    try:
+                        top_us = json.load(data)
+                                
+                        for i in top_us["data"]["pincodes"]:
+                            pincodes=i["entityName"]
+                            for district in top_us["data"]["districts"]:
+                                districts = district["entityName"]
+                                count = district["metric"]["count"]
+                                amount = district["metric"]["amount"]
+                                column6["Pincodes"].append(pincodes)
+                                column6["Districts"].append(districts)
+                                column6["RegisteredUsers"].append(count)
+                                column6["States"].append(state)
+                                column6["Years"].append(year)
+                                column6["Quarter"].append(int(file.strip(".json")))
+                    except:
+                         pass
 
 
 top_users=pd.DataFrame(column6)
+
 
 
 
@@ -221,3 +242,62 @@ map_transaction.to_sql(name='map_transaction', con=engine, if_exists='append', i
 map_users.to_sql(name='map_users', con=engine, if_exists='append', index=False)
 top_transaction.to_sql(name='top_transaction', con=engine, if_exists='append', index=False)
 top_users.to_sql(name='top_users', con=engine, if_exists='append', index=False)
+
+
+
+import psycopg2
+
+mydb = psycopg2.connect(
+    host="localhost",
+    user="postgres",
+    password="758595",
+    database="phonepe",
+    port="5432"
+)
+
+cursor = mydb.cursor()
+cursor.execute("SELECT * FROM aggregated_transaction")
+mydb.commit()
+table1 = cursor.fetchall()
+columns = ["State", "Years", "Quarter", "Transaction Type", "Transaction Count", "Transaction Amount"]
+aggre_tr_tb = pd.DataFrame(table1, columns=columns)
+
+
+cursor = mydb.cursor()
+cursor.execute("SELECT * FROM aggregated_user")
+mydb.commit()
+table2 = cursor.fetchall()
+columns = ["State", "Years", "Quarter", "Brands", "Transaction Count", "Transaction Percentage"]
+aggre_us_tb = pd.DataFrame(table2, columns=columns)
+
+
+cursor = mydb.cursor()
+cursor.execute("SELECT * FROM map_transaction")
+mydb.commit()
+table3 = cursor.fetchall()
+columns = ["State", "Years", "Quarter", "Districts", "Transaction Count", "Transaction Amount",]
+map_tr_tb = pd.DataFrame(table3, columns=columns)
+
+
+cursor = mydb.cursor()
+cursor.execute("SELECT * FROM map_users")
+mydb.commit()
+table4 = cursor.fetchall()
+columns = ["State", "Years", "Quarter", "Districts", "Registered Users", "App Opens",]
+map_us_tb = pd.DataFrame(table4, columns=columns)
+
+
+cursor = mydb.cursor()
+cursor.execute("SELECT * FROM top_transaction")
+mydb.commit()
+table5 = cursor.fetchall()
+columns = ["State", "Years", "Quarter", "Districts","Pincodes", "Transaction Count", "Transaction Amount",]
+top_tr_tb = pd.DataFrame(table5, columns=columns)
+
+
+cursor = mydb.cursor()
+cursor.execute("SELECT * FROM top_users")
+mydb.commit()
+table6 = cursor.fetchall()
+columns = ["State", "Years", "Quarter","Pincodes", "Districts", "Registered Users"]
+top_us_tb = pd.DataFrame(table6, columns=columns)
