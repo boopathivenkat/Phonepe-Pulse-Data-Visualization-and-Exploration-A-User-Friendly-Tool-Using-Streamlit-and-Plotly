@@ -1,11 +1,15 @@
 import json
 import os
-import pandas as pd
 import plotly.express as px
 import mysql.connector
 from sqlalchemy import create_engine
 import psycopg2
 
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.figure_factory as ff
+from streamlit_option_menu import option_menu
 
 
 path1 = r'C:/Users/boopa/Downloads/pulse-master/data/aggregated/transaction/country/india/state/'
@@ -38,8 +42,13 @@ for state in agg_trans_list:
                 column1["Years"].append(year)
                 column1["Quarter"].append(int(file.strip(".json")))
 
-aggregated_transaction=pd.DataFrame(column1)
+aggregated_trdf=pd.DataFrame(column1)
 
+
+aggregated_trdf["States"]=aggregated_trdf["States"].str.replace("andaman-&-nicobar-islands", "Andaman & Nicobar ")
+aggregated_trdf["States"]=aggregated_trdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
+aggregated_trdf["States"]=aggregated_trdf["States"].str.title()
+aggregated_trdf["States"]=aggregated_trdf["States"].str.replace("-", " ")
 
 
 path2 = r'C:/Users/boopa/Downloads/pulse-master/data/aggregated/user/country/india/state/'
@@ -77,8 +86,13 @@ for state in agg_user_list:
             except:
                 pass
 
-aggregated_user=pd.DataFrame(column2)
+aggregated_usdf=pd.DataFrame(column2)
 
+
+aggregated_usdf["States"]=aggregated_usdf["States"].str.replace("andaman-&-nicobar-islands", "Andaman & Nicobar ")
+aggregated_usdf["States"]=aggregated_usdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
+aggregated_usdf["States"]=aggregated_usdf["States"].str.title()
+aggregated_usdf["States"]=aggregated_usdf["States"].str.replace("-", " ")
 
 
 path3 = r'C:/Users/boopa/Downloads/pulse-master/data/map/transaction/hover/country/india/state/'
@@ -111,8 +125,13 @@ for state in map_tran_list:
                 column3["Years"].append(year)
                 column3["Quarter"].append(int(file.strip(".json")))
 
-map_transaction=pd.DataFrame(column3)
+map_trdf=pd.DataFrame(column3)
 
+
+map_trdf["States"]=map_trdf["States"].str.replace("andaman-&-nicobar-islands", "Andaman & Nicobar ")
+map_trdf["States"]=map_trdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
+map_trdf["States"]=map_trdf["States"].str.title()
+map_trdf["States"]=map_trdf["States"].str.replace("-", " ")
 
 
 path4 = r'C:/Users/boopa/Downloads/pulse-master/data/map/user/hover/country/india/state/'
@@ -148,8 +167,13 @@ for state in map_user_list:
                 except:
                     pass
                    
-map_users=pd.DataFrame(column4)
+map_usdf=pd.DataFrame(column4)
 
+
+map_usdf["States"]=map_usdf["States"].str.replace("andaman-&-nicobar-islands", "Andaman & Nicobar ")
+map_usdf["States"]=map_usdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
+map_usdf["States"]=map_usdf["States"].str.title()
+map_usdf["States"]=map_usdf["States"].str.replace("-", " ")
 
 
 path5 = r'C:/Users/boopa/Downloads/pulse-master/data/top/transaction/country/india/state/'
@@ -187,7 +211,13 @@ for state in top_tran_list:
                 except:
                     pass
 
-top_transaction = pd.DataFrame(column5)
+top_trdf = pd.DataFrame(column5)
+
+
+top_trdf["States"]=top_trdf["States"].str.replace("andaman-&-nicobar-islands", "Andaman & Nicobar ")
+top_trdf["States"]=top_trdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
+top_trdf["States"]=top_trdf["States"].str.title()
+top_trdf["States"]=top_trdf["States"].str.replace("-", " ")
 
 
 
@@ -195,7 +225,7 @@ path6 = r'C:/Users/boopa/Downloads/pulse-master/data/top/user/country/india/stat
 
 top_user_list = os.listdir(path6)
 
-column6={"States":[],"Years":[],"Quarter":[], "Pincodes":[],"Districts":[],"RegisteredUsers":[]}
+column6={"States":[],"Years":[],"Quarter":[], "Pincodes":[],"Districts":[],"Count":[],"Amount":[]}
 
 for state in top_tran_list:
     current_states = os.path.join(path5, state)
@@ -220,7 +250,8 @@ for state in top_tran_list:
                                 amount = district["metric"]["amount"]
                                 column6["Pincodes"].append(pincodes)
                                 column6["Districts"].append(districts)
-                                column6["RegisteredUsers"].append(count)
+                                column6["Count"].append(count)
+                                column6["Amount"].append(amount)
                                 column6["States"].append(state)
                                 column6["Years"].append(year)
                                 column6["Quarter"].append(int(file.strip(".json")))
@@ -228,21 +259,24 @@ for state in top_tran_list:
                          pass
 
 
-top_users=pd.DataFrame(column6)
+top_usdf=pd.DataFrame(column6)
 
+
+top_usdf["States"]=top_usdf["States"].str.replace("andaman-&-nicobar-islands", "Andaman & Nicobar ")
+top_usdf["States"]=top_usdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
+top_usdf["States"]=top_usdf["States"].str.title()
+top_usdf["States"]=top_usdf["States"].str.replace("-", " ")
 
 
 
 engine = create_engine("postgresql+psycopg2://postgres:758595@localhost:5432/phonepe")
 
-
-aggregated_transaction.to_sql(name='aggregated_transaction', con=engine, if_exists='append', index=False)
-aggregated_user.to_sql(name='aggregated_user', con=engine, if_exists='append', index=False)
-map_transaction.to_sql(name='map_transaction', con=engine, if_exists='append', index=False)
-map_users.to_sql(name='map_users', con=engine, if_exists='append', index=False)
-top_transaction.to_sql(name='top_transaction', con=engine, if_exists='append', index=False)
-top_users.to_sql(name='top_users', con=engine, if_exists='append', index=False)
-
+aggregated_trdf.to_sql(name='aggregated_transaction', con=engine, if_exists='append', index=False)
+aggregated_usdf.to_sql(name='aggregated_user', con=engine, if_exists='append', index=False)
+map_trdf.to_sql(name='map_transaction', con=engine, if_exists='append', index=False)
+map_usdf.to_sql(name='map_users', con=engine, if_exists='append', index=False)
+top_trdf.to_sql(name='top_transaction', con=engine, if_exists='append', index=False)
+top_usdf.to_sql(name='top_users', con=engine, if_exists='append', index=False)
 
 
 import psycopg2
@@ -260,7 +294,7 @@ cursor.execute("SELECT * FROM aggregated_transaction")
 mydb.commit()
 table1 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Transaction Type", "Transaction Count", "Transaction Amount"]
-aggre_tr_tb = pd.DataFrame(table1, columns=columns)
+aggre_trtb = pd.DataFrame(table1, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -268,7 +302,7 @@ cursor.execute("SELECT * FROM aggregated_user")
 mydb.commit()
 table2 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Brands", "Transaction Count", "Transaction Percentage"]
-aggre_us_tb = pd.DataFrame(table2, columns=columns)
+aggre_ustb = pd.DataFrame(table2, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -276,7 +310,7 @@ cursor.execute("SELECT * FROM map_transaction")
 mydb.commit()
 table3 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts", "Transaction Count", "Transaction Amount",]
-map_tr_tb = pd.DataFrame(table3, columns=columns)
+map_trtb = pd.DataFrame(table3, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -284,7 +318,7 @@ cursor.execute("SELECT * FROM map_users")
 mydb.commit()
 table4 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts", "Registered Users", "App Opens",]
-map_us_tb = pd.DataFrame(table4, columns=columns)
+map_ustb = pd.DataFrame(table4, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -292,12 +326,12 @@ cursor.execute("SELECT * FROM top_transaction")
 mydb.commit()
 table5 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts","Pincodes", "Transaction Count", "Transaction Amount",]
-top_tr_tb = pd.DataFrame(table5, columns=columns)
+top_trtb = pd.DataFrame(table5, columns=columns)
 
 
 cursor = mydb.cursor()
 cursor.execute("SELECT * FROM top_users")
 mydb.commit()
 table6 = cursor.fetchall()
-columns = ["State", "Years", "Quarter","Pincodes", "Districts", "Registered Users"]
-top_us_tb = pd.DataFrame(table6, columns=columns)
+columns = ["State", "Years", "Quarter","Pincodes", "Districts", "Count","Amount"]
+top_ustb = pd.DataFrame(table6, columns=columns)
