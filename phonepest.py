@@ -20,7 +20,7 @@ cursor.execute("SELECT * FROM aggregated_transaction")
 mydb.commit()
 table1 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Transaction Type", "Transaction Count", "Transaction Amount"]
-aggre_trans= pd.DataFrame(table1, columns=columns)
+aggre_trtb= pd.DataFrame(table1, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -28,7 +28,7 @@ cursor.execute("SELECT * FROM aggregated_user")
 mydb.commit()
 table2 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Brands", "Transaction Count", "Transaction Percentage"]
-aggre_user = pd.DataFrame(table2, columns=columns)
+aggre_ustb = pd.DataFrame(table2, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -67,9 +67,9 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-def aggre_tran_year(aa,year):
+def aggre_tran_year(option,year):
 
-    agtr = aa[aa["Years"] == year]
+    agtr = option[option["Years"] == year]
     agtr.reset_index(drop=True, inplace=True)
 
     agtrg = agtr.groupby("State")[["Transaction Count", "Transaction Amount"]].sum()
@@ -93,7 +93,6 @@ with st.sidebar:
         icons=['play-btn','search','info-circle','search','info-circle'])
 
 if selected=="Intro":
-
     st.title("*Welcome to Boopathi's PhonePe*")
     st.subheader('', divider='rainbow')
 
@@ -150,18 +149,42 @@ if selected=="Intro":
 
 
 elif selected == "Top chart":
-    tab1, tab2, tab3 = st.tabs(["Aggregated Transaction", "Map Analysis", "Top Analysis"])
-    year = st.slider('Select a year', 2018, 2023)
-    
-    if tab1:        
-        aggre_tran_year(aggre_trans, year)
 
-    elif tab2 == "Map Analysis":
-        aggre_tran_year(map_trtb, year)
-        
-    elif tab3 == "Top Analysis":
-        aggre_tran_year(top_trtb, year)
+    st.title("Top chart Analaysis")
+
+    tab1, tab2, tab3 = st.tabs(["Aggre", "Map", "Top"])
+    year = st.slider('Select a year', 2018, 2023)
+
+    with tab1:
+        anal = ["aggre_trtb", "aggre_ustb"]
+        tab_selected = st.radio("Select Tab", anal)
+
+        if tab_selected == "aggre_trtb":
+            aggre_tran_year(aggre_trtb,year)
+
+        elif tab_selected == "aggre_ustb":
+            pass
+
+    with tab2:
+        anal2 = ["map_trtb", "map_ustb"]
+        tab_selected = st.radio("Select Tab", anal2)
+
+        if tab_selected == "map_trtb":
+            aggre_tran_year(top_trtb,year)
             
+        elif tab_selected == "map_ustb":
+            pass
+
+    with tab3:
+        anal3 = ["top_trtb", "top_ustb"]
+        tab_selected = st.radio("Select Tab", anal3)
+
+        if tab_selected == "top_trtb":
+            aggre_tran_year(top_trtb,year)
+            
+        elif tab_selected == "top_ustb":
+            pass
+
             
 elif selected=="Explore Data":
     pass
