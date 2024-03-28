@@ -67,13 +67,7 @@ columns = ["State", "Years", "Quarter","Pincodes", "Districts", "Count","Amount"
 Top_users = pd.DataFrame(table6, columns=columns)
 
 
-import pandas as pd
-import plotly.express as px
-import streamlit as st
-import plotly.figure_factory as ff
-
-
-def tran_amount_year(option,year):
+def tran_amount_year(option, year):
 
     agtr = option[option["Years"] == year]
     agtr.reset_index(drop=True, inplace=True)
@@ -81,63 +75,133 @@ def tran_amount_year(option,year):
     agtrg = agtr.groupby("State")[["Transaction Count", "Transaction Amount"]].sum()
     agtrg.reset_index(inplace=True)
 
-    coll1,coll2= st.columns(2)
-    
+    coll1, coll2 = st.columns(2)
+
     with coll1:
         fig_amount = px.bar(agtrg, x="State", y="Transaction Amount", title=f"{year} Transaction Amount",
                             color="Transaction Amount", color_continuous_scale="ylgnbu",
-                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),height=650,width=600)
+                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()), height=650, width=600)
         st.plotly_chart(fig_amount)
+
+        fig_ind_1 = px.choropleth(agtrg, geojson=data1, locations="State", featureidkey="properties.ST_NM",
+                                  color="Transaction Amount", color_continuous_scale="ylgnbu",
+                                  range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()), hover_name="State",
+                                  title=f"{year}", fitbounds="locations", height=650, width=600)
+        fig_ind_1.update_geos(visible=False)
+        st.plotly_chart(fig_ind_1)
 
     with coll2:
         fig_count = px.bar(agtrg, x="State", y="Transaction Count", title=f"{year} Transaction Count",
-                           color="Transaction Amount",color_continuous_scale="tempo",
-                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),height=650,width=600)
+                           color="Transaction Amount", color_continuous_scale="tempo",
+                           range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()), height=650, width=600)
         st.plotly_chart(fig_count)
-        
 
-    url="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
-    
-    response=requests.get(url)
-    data1=json.loads(response.content)
-    state_name=[]
-    for features in data1["features"]:
-        state_name.append(features["properties"]["ST_NM"])
+        fig_ind_2 = px.choropleth(agtrg, geojson=data1, locations="State", featureidkey="properties.ST_NM",
+                                  color="Transaction Count", color_continuous_scale="tempo",
+                                  range_color=(agtrg["Transaction Count"].min(), agtrg["Transaction Count"].max()), hover_name="State",
+                                  title=f"{year}", fitbounds="locations", height=650, width=600)
+        fig_ind_2.update_geos(visible=False)
+        st.plotly_chart(fig_ind_2)
 
-    state_name.sort()
+    return agtr
 
-    coll3,coll4= st.columns(2)
+url = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
+response = requests.get(url)
+data1 = json.loads(response.content)
 
-    with coll3:
-        fig_ind_1=px.choropleth(agtrg,geojson= data1, locations= "State", featureidkey= "properties.ST_NM",
-                                color="Transaction Amount", color_continuous_scale="ylgnbu",
-                                range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()), hover_name="State",
-                                title=f"{year}",fitbounds="locations",height=600,width=600)
-        
-        fig_ind_1.update_geos(visible=False)    
+
+
+import streamlit as st
+import plotly.express as px
+import requests
+import json
+
+def tran_amount_year_quarter(option1, quarter):
+    agtr = option1[option1["Quarter"] == quarter].copy()
+    agtr.reset_index(drop=True, inplace=True)
+
+    agtrg = agtr.groupby("State")[["Transaction Count", "Transaction Amount"]].sum().reset_index()
+
+    url = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
+    response = requests.get(url)
+    data1 = json.loads(response.content)
+
+    coll1, coll2 = st.columns(2)
+
+    with coll1:
+        fig_amount = px.bar(
+            agtrg,
+            x="State",
+            y="Transaction Amount",
+            title=f"{agtr['Years'].min()} Year {quarter} Quarter Transaction Amount",
+            color="Transaction Amount",
+            color_continuous_scale="ylgnbu",
+            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),
+            height=650,
+            width=600
+        )
+        st.plotly_chart(fig_amount)
+
+        fig_count = px.bar(
+            agtrg,
+            x="State",
+            y="Transaction Count",
+            title=f"{agtr['Years'].min()} Year {quarter} Quarter Transaction Count",
+            color="Transaction Count",
+            color_continuous_scale="tempo",
+            range_color=(agtrg["Transaction Count"].min(), agtrg["Transaction Count"].max()),
+            height=650,
+            width=600
+        )
+        st.plotly_chart(fig_count)
+
+    with coll2: 
+        fig_ind_1 = px.choropleth(
+            agtrg,
+            geojson=data1,
+            locations="State",
+            featureidkey="properties.ST_NM",
+            color="Transaction Amount",
+            color_continuous_scale="ylgnbu",
+            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),
+            hover_name="State",
+            title=f"{agtr['Years'].min()} Year {quarter} Quarter Transaction Amount",
+            fitbounds="locations",
+            height=650,
+            width=600
+        )
+        fig_ind_1.update_geos(visible=False)
         st.plotly_chart(fig_ind_1)
 
-    with coll4:
-        fig_ind_2=px.choropleth(agtrg,geojson= data1, locations= "State", featureidkey= "properties.ST_NM",
-                                color="Transaction Count", color_continuous_scale="tempo",
-                                range_color=(agtrg["Transaction Count"].min(), agtrg["Transaction Count"].max()), hover_name="State",
-                                title=f"{year}",fitbounds="locations",height=600,width=600)
-        
-        fig_ind_2.update_geos(visible=False)    
+        fig_ind_2 = px.choropleth(
+            agtrg,
+            geojson=data1,
+            locations="State",
+            featureidkey="properties.ST_NM",
+            color="Transaction Count",
+            color_continuous_scale="tempo",
+            range_color=(agtrg["Transaction Count"].min(), agtrg["Transaction Count"].max()),
+            hover_name="State",
+            title=f"{agtr['Years'].min()} Year {quarter} Quarter Transaction Count",
+            fitbounds="locations",
+            height=650,
+            width=600
+        )
+        fig_ind_2.update_geos(visible=False)
         st.plotly_chart(fig_ind_2)
 
 
 with st.sidebar:
     
     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PhonePe_Logo.svg/300px-PhonePe_Logo.svg.png")
-    st.caption("***Code Written by Boopathi Venkatachalam***")
+    st.caption("***:violet[Code written by Boopathi Venkatachalam]***")
     st.subheader('', divider='rainbow')
 
     selected = option_menu("Main Menu", ["Intro",'Top chart','Explore Data','Contact Us'], 
-        icons=['play-btn','search','info-circle','search','info-circle'])
+        icons=['house','search','gear','phone'])
 
 if selected=="Intro":
-    st.title("*Welcome to Boopathi's PhonePe*")
+    st.title("*:violet[Welcome to Boopathi's PhonePe] :sunglasses:*")
     st.subheader('', divider='rainbow')
 
     st.markdown('''
@@ -146,15 +210,14 @@ if selected=="Intro":
     :gray[company] :tulip::rose::hibiscus:''')
     st.subheader('', divider='rainbow')
 
-    st.markdown("""              
-                **PhonePe is a payments app that allows you to use BHIM UPI,
+    st.markdown(""":violet[**PhonePe is a payments app that allows you to use BHIM UPI,
                 your credit card and debit card or wallet to recharge your mobile phone,
-                pay all your utility bills and to make instant payments at your favourite offline and online stores.**""")
+                pay all your utility bills and to make instant payments at your favourite offline and online stores.**]""")
     
-    st.markdown("""**You can also invest in mutual funds and buy insurance plans on PhonePe. Get Car & Bike Insurance on our app.
+    st.markdown(""":violet[**You can also invest in mutual funds and buy insurance plans on PhonePe. Get Car & Bike Insurance on our app.
                 Link your bank account on PhonePe and transfer money with BHIM UPI instantly! 
                 The PhonePe app is safe and secure, meets all your payment, investment, mutual funds,
-                insurance and banking needs, and is much**""")
+                insurance and banking needs, and is much**]""")
     
     st.markdown("""
             
@@ -194,7 +257,7 @@ if selected=="Intro":
 
 elif selected == "Top chart":
 
-    tab1, tab2, tab3 = st.tabs(["Aggregated", "Map", "Top"])
+    tab1, tab2, tab3 = st.tabs(["***Aggregated***", "***Map***", "***Top***"])
     year = st.select_slider('Select a year',options=[2018,2019,2020,2021,2022,2023])
   
 
@@ -203,7 +266,13 @@ elif selected == "Top chart":
         tab_selected = st.radio("Select Tab", anal)
 
         if tab_selected == "Aggregated_transaction":
-            tran_amount_year(Aggregated_transaction,year)
+            tacy=tran_amount_year(Aggregated_transaction,year)
+
+            coll1,coll2= st.columns(2)
+            with coll1:
+                quarter = st.select_slider('Select a Quarter', range(tacy["Quarter"].min(), tacy["Quarter"].max() + 1))
+                tran_amount_year_quarter(tacy,quarter)     
+
 
         elif tab_selected == "Aggregated_user":
             pass
