@@ -1,16 +1,15 @@
 import json
 import os
+import pandas as pd
 import plotly.express as px
 import mysql.connector
 from sqlalchemy import create_engine
-import psycopg2
-
 import streamlit as st
-import pandas as pd
+from streamlit_option_menu import option_menu
+import requests
 import numpy as np
 import plotly.figure_factory as ff
-from streamlit_option_menu import option_menu
-
+import psycopg2
 
 path1 = r'C:/Users/boopa/Downloads/pulse-master/data/aggregated/transaction/country/india/state/'
 agg_trans_list = os.listdir(path1)
@@ -49,6 +48,7 @@ aggregated_trdf["States"]=aggregated_trdf["States"].str.replace("andaman-&-nicob
 aggregated_trdf["States"]=aggregated_trdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
 aggregated_trdf["States"]=aggregated_trdf["States"].str.title()
 aggregated_trdf["States"]=aggregated_trdf["States"].str.replace("-", " ")
+aggregated_trdf['Years'] = aggregated_trdf['Years'].astype(int)
 
 
 path2 = r'C:/Users/boopa/Downloads/pulse-master/data/aggregated/user/country/india/state/'
@@ -93,6 +93,7 @@ aggregated_usdf["States"]=aggregated_usdf["States"].str.replace("andaman-&-nicob
 aggregated_usdf["States"]=aggregated_usdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
 aggregated_usdf["States"]=aggregated_usdf["States"].str.title()
 aggregated_usdf["States"]=aggregated_usdf["States"].str.replace("-", " ")
+aggregated_usdf['Years'] = aggregated_usdf['Years'].astype(int)
 
 
 path3 = r'C:/Users/boopa/Downloads/pulse-master/data/map/transaction/hover/country/india/state/'
@@ -132,6 +133,7 @@ map_trdf["States"]=map_trdf["States"].str.replace("andaman-&-nicobar-islands", "
 map_trdf["States"]=map_trdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
 map_trdf["States"]=map_trdf["States"].str.title()
 map_trdf["States"]=map_trdf["States"].str.replace("-", " ")
+map_trdf['Years'] = map_trdf['Years'].astype(int)
 
 
 path4 = r'C:/Users/boopa/Downloads/pulse-master/data/map/user/hover/country/india/state/'
@@ -174,6 +176,7 @@ map_usdf["States"]=map_usdf["States"].str.replace("andaman-&-nicobar-islands", "
 map_usdf["States"]=map_usdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
 map_usdf["States"]=map_usdf["States"].str.title()
 map_usdf["States"]=map_usdf["States"].str.replace("-", " ")
+map_usdf['Years'] = map_usdf['Years'].astype(int)
 
 
 path5 = r'C:/Users/boopa/Downloads/pulse-master/data/top/transaction/country/india/state/'
@@ -218,7 +221,7 @@ top_trdf["States"]=top_trdf["States"].str.replace("andaman-&-nicobar-islands", "
 top_trdf["States"]=top_trdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
 top_trdf["States"]=top_trdf["States"].str.title()
 top_trdf["States"]=top_trdf["States"].str.replace("-", " ")
-
+top_trdf['Years'] = top_trdf['Years'].astype(int)
 
 
 path6 = r'C:/Users/boopa/Downloads/pulse-master/data/top/user/country/india/state/'
@@ -266,6 +269,7 @@ top_usdf["States"]=top_usdf["States"].str.replace("andaman-&-nicobar-islands", "
 top_usdf["States"]=top_usdf["States"].str.replace("Dadra & Nagar Haveli & Daman & Diu", "Dadra and Nagar Haveli and Daman and Diu")
 top_usdf["States"]=top_usdf["States"].str.title()
 top_usdf["States"]=top_usdf["States"].str.replace("-", " ")
+top_usdf['Years'] = top_usdf['Years'].astype(int)
 
 
 
@@ -279,7 +283,6 @@ top_trdf.to_sql(name='top_transaction', con=engine, if_exists='append', index=Fa
 top_usdf.to_sql(name='top_users', con=engine, if_exists='append', index=False)
 
 
-import psycopg2
 
 mydb = psycopg2.connect(
     host="localhost",
@@ -294,7 +297,7 @@ cursor.execute("SELECT * FROM aggregated_transaction")
 mydb.commit()
 table1 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Transaction Type", "Transaction Count", "Transaction Amount"]
-aggre_trtb = pd.DataFrame(table1, columns=columns)
+Aggregated_transaction= pd.DataFrame(table1, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -302,7 +305,7 @@ cursor.execute("SELECT * FROM aggregated_user")
 mydb.commit()
 table2 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Brands", "Transaction Count", "Transaction Percentage"]
-aggre_ustb = pd.DataFrame(table2, columns=columns)
+Aggregated_user = pd.DataFrame(table2, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -310,7 +313,7 @@ cursor.execute("SELECT * FROM map_transaction")
 mydb.commit()
 table3 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts", "Transaction Count", "Transaction Amount",]
-map_trtb = pd.DataFrame(table3, columns=columns)
+Map_transaction = pd.DataFrame(table3, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -318,7 +321,7 @@ cursor.execute("SELECT * FROM map_users")
 mydb.commit()
 table4 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts", "Registered Users", "App Opens",]
-map_ustb = pd.DataFrame(table4, columns=columns)
+Map_users = pd.DataFrame(table4, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -326,7 +329,7 @@ cursor.execute("SELECT * FROM top_transaction")
 mydb.commit()
 table5 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts","Pincodes", "Transaction Count", "Transaction Amount",]
-top_trtb = pd.DataFrame(table5, columns=columns)
+Top_transaction = pd.DataFrame(table5, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -334,4 +337,59 @@ cursor.execute("SELECT * FROM top_users")
 mydb.commit()
 table6 = cursor.fetchall()
 columns = ["State", "Years", "Quarter","Pincodes", "Districts", "Count","Amount"]
-top_ustb = pd.DataFrame(table6, columns=columns)
+Top_users = pd.DataFrame(table6, columns=columns)
+
+
+
+def tran_amount_year(option,year):
+
+    agtr = option[option["Years"] == year]
+    agtr.reset_index(drop=True, inplace=True)
+
+    agtrg = agtr.groupby("State")[["Transaction Count", "Transaction Amount"]].sum()
+    agtrg.reset_index(inplace=True)
+
+    coll1,coll2= st.columns(2)
+    
+    with coll1:
+        fig_amount = px.bar(agtrg, x="State", y="Transaction Amount", title=f"{year} Transaction Amount",
+                            color="Transaction Amount", color_continuous_scale="ylgnbu",
+                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),height=650,width=600)
+        fig_amount.show()
+
+    with coll2:
+        fig_count = px.bar(agtrg, x="State", y="Transaction Count", title=f"{year} Transaction Count",
+                           color="Transaction Amount",color_continuous_scale="tempo",
+                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),height=650,width=600)
+        fig_count.show()
+        
+
+    url="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
+    
+    response=requests.get(url)
+    data1=json.loads(response.content)
+    state_name=[]
+    for features in data1["features"]:
+        state_name.append(features["properties"]["ST_NM"])
+
+    state_name.sort()
+
+    fig_ind_1=px.choropleth(agtrg,geojson= data1, locations= "State", featureidkey= "properties.ST_NM",
+                            color="Transaction Amount", color_continuous_scale="ylgnbu",
+                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()), hover_name="State",
+                            title=f"{year}",fitbounds="locations",height=600,width=600)
+    
+    fig_ind_1.update_geos(visible=False)    
+    fig_ind_1.show()
+
+
+    fig_ind_2=px.choropleth(agtrg,geojson= data1, locations= "State", featureidkey= "properties.ST_NM",
+                            color="Transaction Count", color_continuous_scale="tempo",
+                            range_color=(agtrg["Transaction Count"].min(), agtrg["Transaction Count"].max()), hover_name="State",
+                            title=f"{year}",fitbounds="locations",height=600,width=600)
+    
+    fig_ind_2.update_geos(visible=False)    
+    fig_ind_2.show()
+
+    
+
