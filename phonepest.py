@@ -1,11 +1,15 @@
+import json
+import os
 import pandas as pd
-import numpy as np
-import plotly.figure_factory as ff
+import plotly.express as px
+import mysql.connector
+from sqlalchemy import create_engine
 import streamlit as st
 from streamlit_option_menu import option_menu
+import requests
+import numpy as np
+import plotly.figure_factory as ff
 import psycopg2
-import plotly.express as px
-
 
 mydb = psycopg2.connect(
     host="localhost",
@@ -20,7 +24,7 @@ cursor.execute("SELECT * FROM aggregated_transaction")
 mydb.commit()
 table1 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Transaction Type", "Transaction Count", "Transaction Amount"]
-aggre_trtb= pd.DataFrame(table1, columns=columns)
+Aggregated_transaction= pd.DataFrame(table1, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -28,7 +32,7 @@ cursor.execute("SELECT * FROM aggregated_user")
 mydb.commit()
 table2 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Brands", "Transaction Count", "Transaction Percentage"]
-aggre_ustb = pd.DataFrame(table2, columns=columns)
+Aggregated_user = pd.DataFrame(table2, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -36,7 +40,7 @@ cursor.execute("SELECT * FROM map_transaction")
 mydb.commit()
 table3 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts", "Transaction Count", "Transaction Amount",]
-map_trtb = pd.DataFrame(table3, columns=columns)
+Map_transaction = pd.DataFrame(table3, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -44,7 +48,7 @@ cursor.execute("SELECT * FROM map_users")
 mydb.commit()
 table4 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts", "Registered Users", "App Opens",]
-map_ustb = pd.DataFrame(table4, columns=columns)
+Map_users = pd.DataFrame(table4, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -52,7 +56,7 @@ cursor.execute("SELECT * FROM top_transaction")
 mydb.commit()
 table5 = cursor.fetchall()
 columns = ["State", "Years", "Quarter", "Districts","Pincodes", "Transaction Count", "Transaction Amount",]
-top_trtb = pd.DataFrame(table5, columns=columns)
+Top_transaction = pd.DataFrame(table5, columns=columns)
 
 
 cursor = mydb.cursor()
@@ -60,14 +64,16 @@ cursor.execute("SELECT * FROM top_users")
 mydb.commit()
 table6 = cursor.fetchall()
 columns = ["State", "Years", "Quarter","Pincodes", "Districts", "Count","Amount"]
-top_ustb = pd.DataFrame(table6, columns=columns)
+Top_users = pd.DataFrame(table6, columns=columns)
 
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import plotly.figure_factory as ff
 
-def aggre_tran_year(option,year):
+
+def tran_amount_year(option,year):
 
     agtr = option[option["Years"] == year]
     agtr.reset_index(drop=True, inplace=True)
@@ -75,12 +81,50 @@ def aggre_tran_year(option,year):
     agtrg = agtr.groupby("State")[["Transaction Count", "Transaction Amount"]].sum()
     agtrg.reset_index(inplace=True)
 
-    fig_amount = px.bar(agtrg, x="State", y="Transaction Amount", title=f"{year} Transaction Amount")
-    st.plotly_chart(fig_amount)
+    coll1,coll2= st.columns(2)
+    
+    with coll1:
+        fig_amount = px.bar(agtrg, x="State", y="Transaction Amount", title=f"{year} Transaction Amount",
+                            color="Transaction Amount", color_continuous_scale="ylgnbu",
+                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),height=650,width=600)
+        st.plotly_chart(fig_amount)
 
-    fig_count = px.bar(agtrg, x="State", y="Transaction Count", title=f"{year} Transaction Count")
-    st.plotly_chart(fig_count)
+    with coll2:
+        fig_count = px.bar(agtrg, x="State", y="Transaction Count", title=f"{year} Transaction Count",
+                           color="Transaction Amount",color_continuous_scale="tempo",
+                            range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()),height=650,width=600)
+        st.plotly_chart(fig_count)
+        
 
+    url="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
+    
+    response=requests.get(url)
+    data1=json.loads(response.content)
+    state_name=[]
+    for features in data1["features"]:
+        state_name.append(features["properties"]["ST_NM"])
+
+    state_name.sort()
+
+    coll3,coll4= st.columns(2)
+
+    with coll3:
+        fig_ind_1=px.choropleth(agtrg,geojson= data1, locations= "State", featureidkey= "properties.ST_NM",
+                                color="Transaction Amount", color_continuous_scale="ylgnbu",
+                                range_color=(agtrg["Transaction Amount"].min(), agtrg["Transaction Amount"].max()), hover_name="State",
+                                title=f"{year}",fitbounds="locations",height=600,width=600)
+        
+        fig_ind_1.update_geos(visible=False)    
+        st.plotly_chart(fig_ind_1)
+
+    with coll4:
+        fig_ind_2=px.choropleth(agtrg,geojson= data1, locations= "State", featureidkey= "properties.ST_NM",
+                                color="Transaction Count", color_continuous_scale="tempo",
+                                range_color=(agtrg["Transaction Count"].min(), agtrg["Transaction Count"].max()), hover_name="State",
+                                title=f"{year}",fitbounds="locations",height=600,width=600)
+        
+        fig_ind_2.update_geos(visible=False)    
+        st.plotly_chart(fig_ind_2)
 
 
 with st.sidebar:
@@ -150,39 +194,38 @@ if selected=="Intro":
 
 elif selected == "Top chart":
 
-    st.title("Top chart Analaysis")
-
-    tab1, tab2, tab3 = st.tabs(["Aggre", "Map", "Top"])
-    year = st.slider('Select a year', 2018, 2023)
+    tab1, tab2, tab3 = st.tabs(["Aggregated", "Map", "Top"])
+    year = st.select_slider('Select a year',options=[2018,2019,2020,2021,2022,2023])
+  
 
     with tab1:
-        anal = ["aggre_trtb", "aggre_ustb"]
+        anal = ["Aggregated_transaction", "Aggregated_user"]
         tab_selected = st.radio("Select Tab", anal)
 
-        if tab_selected == "aggre_trtb":
-            aggre_tran_year(aggre_trtb,year)
+        if tab_selected == "Aggregated_transaction":
+            tran_amount_year(Aggregated_transaction,year)
 
-        elif tab_selected == "aggre_ustb":
+        elif tab_selected == "Aggregated_user":
             pass
 
     with tab2:
-        anal2 = ["map_trtb", "map_ustb"]
+        anal2 = ["Map_transaction", "Map_user"]
         tab_selected = st.radio("Select Tab", anal2)
 
-        if tab_selected == "map_trtb":
-            aggre_tran_year(top_trtb,year)
+        if tab_selected == "Map_transaction":
+            tran_amount_year(Map_transaction,year)
             
-        elif tab_selected == "map_ustb":
+        elif tab_selected == "Map_user":
             pass
 
     with tab3:
-        anal3 = ["top_trtb", "top_ustb"]
+        anal3 = ["Top_transaction", "Top_user"]
         tab_selected = st.radio("Select Tab", anal3)
 
-        if tab_selected == "top_trtb":
-            aggre_tran_year(top_trtb,year)
+        if tab_selected == "Top_transaction":
+            tran_amount_year(Top_transaction,year)
             
-        elif tab_selected == "top_ustb":
+        elif tab_selected == "Top_user":
             pass
 
             
