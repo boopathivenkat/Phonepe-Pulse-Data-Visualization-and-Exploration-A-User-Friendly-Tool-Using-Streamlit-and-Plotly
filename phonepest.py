@@ -153,26 +153,68 @@ def tran_amount_year_quarter(option1, quarter):
     return agtr
 
 
-def transaction_type(df, state):
+def transaction_type(df, states):
+    agtrg = df[df["State"]==(states)]
+    agtrg.reset_index(drop=True, inplace=True) 
 
-    agtrg = df[df["State"] == state]
-    agtrg.reset_index(drop=True,inplace=True) 
+    coll3, coll4 = st.columns(2)
+    with coll3:
+        fig_pie1 = px.pie(data_frame=agtrg, names="Transaction Type", values="Transaction Amount",
+                      width=650, title=f"{states} {agtrg['Years'].min()} - {quarter} Quarter Transaction Amount", hole=0.40)
+        st.plotly_chart(fig_pie1)
 
-    fig_pie1 = px.pie(data_frame=agtrg, names="Transaction Type", values="Transaction Amount",
-                    width=650, title="Transaction Amount", hole=0.45)
-    fig_pie1.show()
-
-
-    fig_pie2 = px.pie(data_frame=agtrg, names="Transaction Type", values="Transaction Count",
-                    width=650, title="Transaction Count", hole=0.45)
-    fig_pie2.show()
+    with coll4:
+        fig_pie2 = px.pie(data_frame=agtrg, names="Transaction Type", values="Transaction Count",
+                        width=650, title=f"{states} {agtrg['Years'].min()} - {quarter} Quarter Transaction Count", hole=0.40)
+        st.plotly_chart(fig_pie2)
 
     return agtrg
 
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+def brands(df, year):
+    agusy = df[df["Years"] == year]
+    agusy.reset_index(drop=True, inplace=True)
+
+    agusyg = agusy.groupby("Brands")["Transaction Count"].sum()
+    agusyg = agusyg.reset_index()
+
+    colors = px.colors.qualitative.Plotly[:len(agusyg)]
+
+    fig_bar = px.bar(data_frame=agusyg, y="Brands", x="Transaction Count", hover_name="Brands",
+                     width=980, height=600, text_auto='.3s', title=f"{agusy['Years'].min()} Brands Transaction Count",
+                     color=agusyg["Brands"], color_discrete_sequence=colors)
+  
+    #fig_bar.show()
+
+    return agusy
+
+def brandsqu(df,quarter):
+    agusq = df[df["Quarter"] == quarter]
+    agusq.reset_index(drop=True, inplace=True)
+
+    agusqg = pd.DataFrame(agusq.groupby("Brands")["Transaction Count"].sum())
+    agusqg = agusqg.reset_index()
+
+    colors = px.colors.qualitative.Plotly[:len(agusqg)]
+
+    fig_bar = px.bar(data_frame=agusqg, y="Brands", x="Transaction Count", hover_name="Brands",
+                     width=980, height=600, text_auto='.3s', title=f"{year} - {quarter} Quarter Brand Wise Transaction Count",
+                     color=agusqg["Brands"], color_discrete_sequence=colors)
+  
+    st.plotly_chart(fig_bar)
+
+    return agusq
+
+import streamlit as st
+
+st.set_page_config(layout="wide")
 
 with st.sidebar:
     
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/PhonePe_Logo.svg/300px-PhonePe_Logo.svg.png")
+    st.image("PhonePe.png")
     st.caption("***:violet[Code written by Boopathi Venkatachalam]***")
     st.subheader('', divider='rainbow')
 
@@ -184,7 +226,7 @@ if selected=="Intro":
     st.subheader('', divider='rainbow')
 
     st.markdown('''
-    :tulip::rose::hibiscus: :rainbow[PhonePe] :orange[is] :green[an] :blue[Indian] :violet[multinational]
+    :tulip::rose::hibiscus: :violet[PhonePe] :orange[is] :green[an] :blue[Indian] :violet[multinational]
     :gray[digital] :red[payments] :green[and] :blue[financial] :violet[services]
     :gray[company] :tulip::rose::hibiscus:''')
     st.subheader('', divider='rainbow')
@@ -230,11 +272,16 @@ if selected=="Intro":
     
                     
     :green[*Note: Current status - Active]""")
+    st.divider()
+    import streamlit as st
 
+    video_file = open('pulse.mp4', 'rb')
+    video_bytes = video_file.read()
+    st.video(video_bytes)
     st.divider()
 
 
-elif selected == "Top chart":
+elif selected == "Explore Data":
 
     tab1, tab2, tab3 = st.tabs(["***Aggregated***", "***Map***", "***Top***"])  
 
@@ -243,25 +290,32 @@ elif selected == "Top chart":
         tab_selected = st.radio("Select Tab", anal)
 
         if tab_selected == "Aggregated_transaction":
-            year = st.select_slider('Select a year',options=[2018,2019,2020,2021,2022,2023])
 
+            year = st.slider('Select a year', min_value=2018, max_value=2023, step=1, key='unique_slider_key_1')
             tacy=tran_amount_year(Aggregated_transaction,year)
-            quarter = st.select_slider('Select a Quarter',options=[1,2,3,4])
-            
-            tran_amount_year_quarter(tacy,quarter) 
-            
-            transaction_type(tacy,"West Bengal")
+
+            quarter = st.select_slider('Select a Quarter',options=[1,2,3,4])         
+            tacyq=tran_amount_year_quarter(tacy,quarter) 
+
+            state=st.selectbox('Select a State',tacy["State"].unique())
+            transaction_type(tacyq,state)
 
 
-        elif tab_selected == "Aggregated_user":
-            pass                                  
+        elif tab_selected == "Aggregated_user":             
+            year = st.slider('Select a year', min_value=2018, max_value=2023, step=1, key='unique_slider_key_1') 
+            quart = st.select_slider('Select a Quarter', options=[1, 2, 3, 4])
+            abca=brands(Aggregated_user, year)
+            brandsqu(abca, quart)
+            
 
     with tab2:
         anal2 = ["Map_transaction", "Map_user"]
         tab_selected = st.radio("Select Tab", anal2)
+       
 
         if tab_selected == "Map_transaction":
-            tran_amount_year(Map_transaction,year)
+            #tran_amount_year(Map_transaction,year1)
+            pass
             
         elif tab_selected == "Map_user":
             pass
@@ -269,29 +323,59 @@ elif selected == "Top chart":
     with tab3:
         anal3 = ["Top_transaction", "Top_user"]
         tab_selected = st.radio("Select Tab", anal3)
+        year1 = st.slider('Select a year', min_value=2018, max_value=2023, step=1, key='unique_slider_key_3')
 
         if tab_selected == "Top_transaction":
-            tran_amount_year(Top_transaction,year)
+            tran_amount_year(Top_transaction,year1)
             
         elif tab_selected == "Top_user":
             pass
 
             
-elif selected=="Explore Data":
+elif selected=="Top chart":
     pass
 
 
 elif selected=="Contact Us":
+    
     st.title("Contact Us")
-    st.subheader('Boopathi Venkatachalam :sunglasses:')
-    st.caption('Mobile:- 9751959575, E-Mail - boopathi762000@gmail.com')
     st.divider()
+    coll1, coll2 = st.columns(2)
 
-    st.caption("Any Enquiry")
-    name = st.text_input("Name")
-    email = st.text_input("Email")
-    message = st.text_area("Message")
+    with coll1: 
+        st.subheader('Boopathi Venkatachalam :sunglasses:')
+        st.caption('Mobile:- 9751959575, E-Mail - boopathi762000@gmail.com')
+
+        st.caption(":red[Note: * fill all mandatory fields]")     
+        Name = st.text_input("Name*")
+        Mobile = st.text_input("Mobile*")
+        Email = st.text_input("Email*")
+        Message = st.text_area("Message (optional)")
+
+        from streamlit_star_rating import st_star_rating
+        st.caption(":violet[* Please rate you experience]")  
+        st_star_rating(label = " ", maxValue = 5, defaultValue = 3, key = "rating", emoticons = True )
+
+        if st.button("Submit"):
+            st.success('''Thank you for your Valuable Rationg and Message !
+                        We will get back to you soon''')
+    
+        st.divider()  
 
 
-    if st.button("Submit"):
-        st.success("Thank you for your message! We will get back to you soon.")
+    with coll2:
+        st.image('photo.jpg')
+        st.link_button("Git Hub", "https://streamlit.io/gallery")
+        st.link_button("Linked in", "https://streamlit.io/gallery")
+        st.link_button("Whatsapp", "https://streamlit.io/gallery")
+        st.link_button("E-Mail", "https://streamlit.io/gallery")
+
+
+  
+    st.subheader('Phonepe Pulse Data Visualisation')
+
+    st.markdown('''The goal of this project is to extract data from the Phonepe pulse Github repository,
+                 transform and clean the data,insert it into a MySQL database, and create a live geo visualization dashboard using Streamlit and Plotly in Python.
+                 The dashboard will display the data in an interactive and visually appealing manner, with atleast 10 different dropdown options for users to select differentfacts and figures to display.
+                 The solution must be secure, efficient,and user-friendly,providing valuable insights and informationabout the data in the Phonepe pulse Github repository.''')
+    st.divider()
