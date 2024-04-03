@@ -183,7 +183,7 @@ def brands(df, year):
 
     colors = px.colors.qualitative.Plotly[:len(agusyg)]
 
-    fig_bar = px.bar(data_frame=agusyg, y="Brands", x="Transaction Count", hover_name="Brands",
+    fig_bar = px.bar(data_frame=agusyg, x="Brands", y="Transaction Count", hover_name="Brands",
                      width=980, height=600, text_auto='.3s', title=f"{agusy['Years'].min()} Brands Transaction Count",
                      color=agusyg["Brands"], color_discrete_sequence=colors)
   
@@ -198,15 +198,26 @@ def brandsqu(df,quarter):
     agusqg = pd.DataFrame(agusq.groupby("Brands")["Transaction Count"].sum())
     agusqg = agusqg.reset_index()
 
-    colors = px.colors.qualitative.Plotly[:len(agusqg)]
-
-    fig_bar = px.bar(data_frame=agusqg, y="Brands", x="Transaction Count", hover_name="Brands",
-                     width=980, height=600, text_auto='.3s', title=f"{year} - {quarter} Quarter Brand Wise Transaction Count",
-                     color=agusqg["Brands"], color_discrete_sequence=colors)
-  
+    fig_bar = px.bar(data_frame=agusqg, x="Brands", y="Transaction Count", hover_name="Brands",
+                     width=980, height=600, text_auto='.3s', title=f"All Over India's -{year}-{quarter} Quarter Brands wise Transaction Count",
+                     color=agusqg["Brands"])
+    
     st.plotly_chart(fig_bar)
 
     return agusq
+
+
+def brandstate(df, state, year):
+    state_df = df[(df["State"] == state) & (df["Years"] == year)]
+    state_df.reset_index(drop=True, inplace=True)
+    
+    fig = px.sunburst(state_df, path=['State','Brands','Transaction Count'],title=f"{state}-Brands wise Transaction Count",
+                      hover_name="Brands", values='Transaction Count')    
+    st.plotly_chart(fig)
+
+    return state_df
+
+
 
 import streamlit as st
 
@@ -302,10 +313,14 @@ elif selected == "Explore Data":
 
 
         elif tab_selected == "Aggregated_user":             
-            year = st.slider('Select a year', min_value=2018, max_value=2023, step=1, key='unique_slider_key_1') 
-            quart = st.select_slider('Select a Quarter', options=[1, 2, 3, 4])
-            abca=brands(Aggregated_user, year)
-            brandsqu(abca, quart)
+            year = st.slider('Select a year', min_value=2018, max_value=2022, step=1, key='unique_slider_key_1') 
+            quart = st.select_slider('Select a Quarter', options=[1, 2, 3, 4])      
+
+            brandsf=brands(Aggregated_user, year)
+            stus=brandsqu(brandsf, quart)
+
+            state=st.selectbox('Select a State',Aggregated_user["State"].unique())
+            brandstate(stus, state, year)
             
 
     with tab2:
