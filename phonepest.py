@@ -210,7 +210,7 @@ def brandstate(df, state, year):
 
     return state_df
 
-def topdisttr(df,state):
+def mapdisttr(df,state):
     agusst = df[df["State"] == state]
     agusst.reset_index(drop=True, inplace=True)
 
@@ -231,7 +231,7 @@ def topdisttr(df,state):
     st.plotly_chart(fig_bar1)
     return agusst
 
-def topdistus(df, state):
+def mapdistus(df, state):
     agusst = df[df["State"] == state]
     agusst.reset_index(drop=True, inplace=True)
 
@@ -426,7 +426,7 @@ if selected=="Intro":
 
 elif selected == "Explore Data":
 
-    tab1, tab2, tab3 = st.tabs(["***Aggregated***", "***top***", "***Top***"])  
+    tab1, tab2, tab3 = st.tabs(["***Aggregated***", "***Map***", "***Top***"])  
 
     with tab1:
         anal = ["Aggregated_transaction", "Aggregated_user"]
@@ -456,16 +456,16 @@ elif selected == "Explore Data":
             
 
     with tab2:
-        anal2 = ["top_transaction", "top_user"]
+        anal2 = ["Map_transaction", "Map_user"]
         tab_selected = st.radio("Select Tab", anal2)       
 
-        if tab_selected == "top_transaction":
+        if tab_selected == "Map_transaction":
             state = st.selectbox('Select a State', Aggregated_user["State"].unique(), key='state_selectbox')
-            topdisttr(top_transaction,state)
+            mapdisttr(Map_transaction,state)
             
-        elif tab_selected == "top_user":
+        elif tab_selected == "Map_user":
             state = st.selectbox('Select a State', Aggregated_user["State"].unique(), key='state_selectbox')
-            topdistus(top_users, state)
+            mapdistus(Map_users, state)
 
     with tab3:
         anal3 = ["Top_transaction", "Top_user"]
