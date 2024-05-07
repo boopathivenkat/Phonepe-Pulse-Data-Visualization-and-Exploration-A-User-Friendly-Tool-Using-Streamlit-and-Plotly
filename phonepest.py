@@ -375,6 +375,8 @@ def topuspins(df, states):
     st.plotly_chart(fig)    
     return ttyqu
 
+
+
 def ques_transaction_count(tabname):
     mydb = psycopg2.connect(
         host="localhost",
@@ -390,7 +392,7 @@ def ques_transaction_count(tabname):
     mydb.commit()
     table1 = cursor.fetchall()
     columns = ["states","transaction_count"]
-    transaction_dec= pd.DataFrame(table1, columns=columns)
+    dec= pd.DataFrame(table1, columns=columns)
 
 
     cursor = mydb.cursor()
@@ -399,7 +401,7 @@ def ques_transaction_count(tabname):
     mydb.commit()
     table2 = cursor.fetchall()
     columns = ["states","transaction_count"]
-    transaction_ase= pd.DataFrame(table2, columns=columns)
+    ase= pd.DataFrame(table2, columns=columns)
 
 
     cursor = mydb.cursor()
@@ -409,15 +411,19 @@ def ques_transaction_count(tabname):
     mydb.commit()
     table3 = cursor.fetchall()
     columns = ["states","transaction_count"]
-    transaction_avg= pd.DataFrame(table3, columns=columns)
+    avg= pd.DataFrame(table3, columns=columns)
 
-    fig = px.bar(transaction_dec, y="transaction_count", x="states",color="states",hover_name="states",width=650, height=600)
-    st.plotly_chart(fig)
+    st.subheader("Top 10 and Least 10 And Avarage of Transaction Count")
+    coll1, coll2 = st.columns(2)
+    with coll1:  
+        fig = px.bar(dec, y="transaction_count", x="states",color="states",hover_name="states",width=650, height=600)
+        st.plotly_chart(fig)
 
-    fig1 = px.bar(transaction_ase, y="transaction_count", x="states",color="states",hover_name="states",width=650, height=600)
-    st.plotly_chart(fig1)
+    with coll2: 
+        fig1 = px.bar(ase, y="transaction_count", x="states",color="states",hover_name="states",width=650, height=600)
+        st.plotly_chart(fig1)
 
-    fig2 = px.bar(transaction_avg, y="transaction_count", x="states",color="states",hover_name="states",width=1080, height=720)
+    fig2 = px.bar(avg, y="transaction_count", x="states",color="states",hover_name="states",width=1250, height=750)
     st.plotly_chart(fig2)
 
 
@@ -436,7 +442,7 @@ def ques_transaction_amount(tabname):
     mydb.commit()
     table1 = cursor.fetchall()
     columns = ["states","transaction_amount"]
-    transaction_dec= pd.DataFrame(table1, columns=columns)
+    dec= pd.DataFrame(table1, columns=columns)
 
 
     cursor = mydb.cursor()
@@ -445,7 +451,7 @@ def ques_transaction_amount(tabname):
     mydb.commit()
     table2 = cursor.fetchall()
     columns = ["states","transaction_amount"]
-    transaction_ase= pd.DataFrame(table2, columns=columns)
+    ase= pd.DataFrame(table2, columns=columns)
 
 
     cursor = mydb.cursor()
@@ -455,17 +461,171 @@ def ques_transaction_amount(tabname):
     mydb.commit()
     table3 = cursor.fetchall()
     columns = ["states","transaction_amount"]
-    transaction_avg= pd.DataFrame(table3, columns=columns)
+    avg= pd.DataFrame(table3, columns=columns)
 
-    fig = px.bar(transaction_dec, y="transaction_amount", x="states",color="states",hover_name="states",width=650, height=600)
-    st.plotly_chart(fig)
+    st.subheader("Top 10 and Least 10 And Avarage of Transaction Amount")
 
-    fig1 = px.bar(transaction_ase, y="transaction_amount", x="states",color="states",hover_name="states",width=800, height=650)
-    st.plotly_chart(fig1)
+    coll1, coll2 = st.columns(2)
+    with coll1:  
+        fig = px.bar(dec, y="transaction_amount", x="states",color="states",hover_name="states",width=650, height=600)
+        st.plotly_chart(fig)
+    with coll2: 
+        fig1 = px.bar(ase, y="transaction_amount", x="states",color="states",hover_name="states",width=800, height=650)
+        st.plotly_chart(fig1)
 
-    fig2 = px.bar(transaction_avg, y="transaction_amount", x="states",color="states",hover_name="states",width=1080, height=720)
+    fig2 = px.bar(avg, y="transaction_amount", x="states",color="states",hover_name="states",width=1250, height=750)
     st.plotly_chart(fig2)
 
+
+def ques_map_reg_users(states):
+    mydb = psycopg2.connect(
+        host="localhost",
+        user="postgres",
+        password="758595",
+        database="phonepe",
+        port="5432")
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT districts ,SUM (registered_users) as registered_users
+                   FROM Map_users where states='{states}'
+                   group by districts order by registered_users desc limit 10''')
+
+    mydb.commit()
+    table1 = cursor.fetchall()
+    columns = ["districts","registered_users"]
+    dec= pd.DataFrame(table1, columns=columns)
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT districts ,SUM (registered_users) as registered_users
+                   FROM Map_users where states='{states}'
+                   group by districts order by registered_users limit 10''')
+
+    mydb.commit()
+
+    table2 = cursor.fetchall()
+    columns = ["districts","registered_users"]
+    ase= pd.DataFrame(table2, columns=columns)
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT districts ,AVG (registered_users) as registered_users
+                   FROM Map_users where states='{states}'
+                   group by districts order by registered_users''')
+    mydb.commit()
+    table3 = cursor.fetchall()
+    columns = ["districts","registered_users"]
+    avg= pd.DataFrame(table3, columns=columns)
+
+    coll1, coll2 = st.columns(2)
+    with coll1:  
+        fig = px.bar(dec, y="registered_users", x="districts",color="districts",hover_name="districts",width=650, height=600)
+        st.plotly_chart(fig)
+    with coll2:  
+        fig1 = px.bar(ase, y="registered_users", x="districts",color="districts",hover_name="districts",width=650, height=600)
+        st.plotly_chart(fig1)
+
+    fig2 = px.bar(avg, y="registered_users", x="districts",color="districts",hover_name="districts",width=1250, height=750)
+    st.plotly_chart(fig2)
+
+def ques_users_toppin(states):
+    mydb = psycopg2.connect(
+        host="localhost",
+        user="postgres",
+        password="758595",
+        database="phonepe",
+        port="5432")
+    cursor = mydb.cursor()
+
+    cursor.execute(f'''SELECT pincodes, SUM(registered_users) as registered_users
+            FROM Top_users WHERE states= '{states}'
+            GROUP BY pincodes ORDER BY registered_users DESC LIMIT 10;''')
+    mydb.commit()
+
+    table1 = cursor.fetchall()
+    columns = ["pincodes","registered_users"]
+    dec= pd.DataFrame(table1, columns=columns)
+
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT pincodes ,SUM (registered_users) as registered_users
+                   FROM Top_users where states='{states}'
+                   group by pincodes order by registered_users limit 10''')
+
+    mydb.commit()
+
+    table2 = cursor.fetchall()
+    columns = ["pincodes","registered_users"]
+    ase= pd.DataFrame(table2, columns=columns)
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT pincodes ,AVG (registered_users) as registered_users
+                   FROM Top_users where states='{states}'
+                   group by pincodes order by registered_users''')
+    mydb.commit()
+
+    table3 = cursor.fetchall()
+    columns = ["pincodes","registered_users"]
+    avg= pd.DataFrame(table3, columns=columns)
+
+    coll1, coll2 = st.columns(2)
+    with coll1:    
+        fig = px.pie(dec, values="registered_users", names="pincodes", color="pincodes", hover_name="pincodes",width=500, height=550)
+        st.plotly_chart(fig)
+    with coll2:   
+        fig1 = px.pie(dec, values="registered_users", names="pincodes", color="pincodes", hover_name="pincodes", width=500, height=550)
+        st.plotly_chart(fig1)
+
+    fig2 = px.pie(dec, values="registered_users", names="pincodes", color="pincodes", hover_name="pincodes", width=650, height=600)
+    st.plotly_chart(fig2)
+
+def ques_map_appopen_users(states):
+    mydb = psycopg2.connect(
+        host="localhost",
+        user="postgres",
+        password="758595",
+        database="phonepe",
+        port="5432")
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT districts ,SUM (app_opens) as app_opens
+                   FROM Map_users where states='{states}'
+                   group by districts order by app_opens desc limit 10''')
+
+    mydb.commit()
+    table1 = cursor.fetchall()
+    columns = ["districts","app_opens"]
+    dec= pd.DataFrame(table1, columns=columns)
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT districts ,SUM (app_opens) as app_opens
+                   FROM Map_users where states='{states}'
+                   group by districts order by app_opens limit 10''')
+
+    mydb.commit()
+
+    table2 = cursor.fetchall()
+    columns = ["districts","app_opens"]
+    ase= pd.DataFrame(table2, columns=columns)
+
+    cursor = mydb.cursor()
+    cursor.execute(f'''SELECT districts ,AVG (app_opens) as app_opens
+                   FROM Map_users where states='{states}'
+                   group by districts order by app_opens''')
+    mydb.commit()
+    table3 = cursor.fetchall()
+    columns = ["districts","app_opens"]
+    avg= pd.DataFrame(table3, columns=columns)
+
+    coll1, coll2 = st.columns(2)
+    with coll1:
+        fig = px.bar(dec, y="app_opens", x="districts",color="districts",hover_name="districts",width=600, height=650)
+        st.plotly_chart(fig)
+    with coll2:
+        fig1 = px.bar(ase, y="app_opens", x="districts",color="districts",hover_name="districts",width=600, height=650)
+        st.plotly_chart(fig1)
+
+    fig2 = px.bar(avg, y="app_opens", x="districts",color="districts",hover_name="districts",width=1250, height=750)
+    st.plotly_chart(fig2)
+    
 import streamlit as st
 
 st.set_page_config(layout="wide")
@@ -475,9 +635,9 @@ with st.sidebar:
     st.image("PhonePe.png")
     st.caption("***:violet[Code written by Boopathi Venkatachalam]***")
 
+
     selected = option_menu("Main Menu", ["Intro",'Top Chart','Explore Data','Contact Us'], 
         icons=['house','search','gear','phone'])
-
 
 if selected=="Intro":
     st.title("*:violet[Welcome to Boopathi's PhonePe] :sunglasses:*")
@@ -530,13 +690,13 @@ if selected=="Intro":
     
                     
     :green[*Note: Current status - Active]""")
-
+    
     import streamlit as st
 
     video_file = open('pulse.mp4', 'rb')
     video_bytes = video_file.read()
     st.video(video_bytes)
-
+    
 
 elif selected == "Top Chart":
     mydb = psycopg2.connect(
@@ -549,46 +709,50 @@ elif selected == "Top Chart":
     cursor = mydb.cursor()
 
     question= st.selectbox("Select the Question",[ 
-                "1. Top 10 State in Aggregated Transaction",
-
-                "2. Top 10 State in Map Transaction",
-
-                "3. Top 10 State in Top Transaction",
                  
-                "4. Total transaction_amount and transaction_count of Aggregated Transaction",
+                "1. Total transaction_amount and transaction_count of Aggregated Transaction",
 
-                "5. Total transaction_amount and transaction_count of Map Transaction",
+                "2. Total transaction_amount and transaction_count of Map Transaction",
 
-                "6. Total transaction_amount and transaction_count of Top Transaction",
+                "3. Total transaction_amount and transaction_count of Top Transaction",
 
-                "7. transaction_count of Aggregated User",
+                "4. Total transaction_count of Aggregated User",
 
-                "8. Registered users of Map User",
+                "5. Registered users of Map User",
 
-                "9. App opens of Map User",
+                "6. App opens of Map User",
 
-                "10. Registered users of Top User"])
+                "7. Registered users of Top User"])
     
-    if question =="4. Total transaction_amount and transaction_count of Aggregated Transaction":
-        st.subheader="Aggregated Transaction Amount"
+    if question =="1. Total transaction_amount and transaction_count of Aggregated Transaction":
         ques_transaction_amount("Aggregated_transaction")
-        st.subheader="Aggregated Transaction Count"
         ques_transaction_count("Aggregated_transaction")
 
-    if question =="5. Total transaction_amount and transaction_count of Map Transaction":
-        st.subheader="Map Transaction Amount"
+    if question =="2. Total transaction_amount and transaction_count of Map Transaction":
         ques_transaction_amount("Map_transaction")
-        st.subheader="Map Transaction Count"
         ques_transaction_count("Map_transaction")
     
-    if question =="6. Total transaction_amount and transaction_count of Top Transaction":
-        st.subheader="Top Transaction Amount"
+    if question =="3. Total transaction_amount and transaction_count of Top Transaction":
         ques_transaction_amount("Top_transaction")
-        st.subheader="Map Transaction Count"
         ques_transaction_count("Top_transaction")
 
+    if question =="4. Total transaction_count of Aggregated User":
+        ques_transaction_count("Aggregated_user")
         
 
+    if question =="5. Registered users of Map User":
+        states=st.selectbox('Select a states',Map_users["states"].unique())
+        ques_map_reg_users(states)
+
+    if question =="6. App opens of Map User":
+        states=st.selectbox('Select a states',Top_users["states"].unique())
+        ques_map_appopen_users(states)
+
+    if question =="7. Registered users of Top User":
+        st.subheader('Registered users of Top User', divider='rainbow')
+        states=st.selectbox('Select a states',Top_users["states"].unique())
+        ques_users_toppin(states)
+             
 
 elif selected == "Explore Data":
 
@@ -658,7 +822,7 @@ elif selected == "Explore Data":
 elif selected=="Contact Us":
     
     st.title("Contact Us")
-    st.divider()
+    
     coll1, coll2 = st.columns(2)
 
     with coll1: 
@@ -671,15 +835,11 @@ elif selected=="Contact Us":
         Email = st.text_input("Email*")
         Message = st.text_area("Message (optional)")
 
-        from streamlit_star_rating import st_star_rating
-        st.caption(":violet[* Please rate you experience]")  
-        st_star_rating(label = " ", maxValue = 5, defaultValue = 3, key = "rating", emoticons = True )
-
         if st.button("Submit"):
             st.success('''Thank you for your Valuable Rationg and Message !
                         We will get back to you soon''')
     
-        st.divider()  
+          
 
     with coll2:
         st.image('photo.jpg')
@@ -695,4 +855,4 @@ elif selected=="Contact Us":
                  transform and clean the data,insert it into a MySQL database, and create a live geo visualization dashboard using Streamlit and Plotly in Python.
                  The dashboard will display the data in an interactive and visually appealing manner, with atleast 10 different dropdown options for users to select differentfacts and figures to display.
                  The solution must be secure, efficient,and user-friendly,providing valuable insights and informationabout the data in the Phonepe pulse Github repository.''')
-    st.divider()
+    
